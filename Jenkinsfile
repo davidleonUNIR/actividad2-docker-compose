@@ -1,18 +1,78 @@
 pipeline {
     agent any
 
+    environment {
+        PROJECT_NAME      = "tfm-devsecops-demo"
+        DEP_CHECK_OUT_DIR = "reports/dependency-check"
+        TRIVY_OUT_DIR     = "reports/trivy"
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Clonando repositorio desde GitHub...'
                 checkout scm
             }
         }
 
-        stage('Build de prueba') {
+        stage('Build y pruebas') {
             steps {
-                echo 'Pipeline del TFM ejecutado correctamente.'
+                sh '''
+                    echo "Ejecutando build y pruebas básicas..."
+                '''
             }
+        }
+
+        stage('Analisis de dependencias (OWASP Dependency-Check)') {
+            steps {
+                sh '''
+                    mkdir -p ${DEP_CHECK_OUT_DIR}
+                    mkdir -p .depcheck-data
+
+                    docker run --rm \
+                        -v "$PWD":/src \
+                        -v "$PWD/.depcheck-data":/usr/share/dependency-check/data \
+                        owasp/dependency-check:latest \
+                        --project "${PROJECT_NAME}" \
+                        --scan /src \
+                        --format HTML \
+                        --out /src/${DEP_CHECK_OUT_DIR}
+                '''
+            }
+        }
+
+        stage('Construccion imagen Docker') {
+            steps {
+                sh '''
+                    echo "Construyendo imagen Docker de la aplicación..."
+                    docker build -t ${PROJECT_NAME}:latest .
+                '''
+            }
+        }
+
+        stage('Analisis de imagen (Trivy)') {
+            steps {
+                sh '''
+                    mkdir -p ${TRIVY_OUT_DIR}
+                    mkdir -p .trivy-cache
+
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v "$PWD/.trivy-cache":/root/.cache/ \
+                        aquasec/trivy:latest \
+                        image --exit-code 0 \
+                        --severity HIGH,CRITICAL \
+                        --format json \
+                        --output /src/${TRIVY_OUT_DIR}/trivy-image.json \
+                        ${PROJECT_NAME}:latest
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'reports/**/*', fingerprint: true
         }
     }
 }
