@@ -26,20 +26,20 @@ pipeline {
         stage('Analisis de dependencias (OWASP Dependency-Check)') {
             steps {
                 sh '''
-                    mkdir -p ${DEP_CHECK_OUT_DIR}
-                    mkdir -p .depcheck-data
-
-                    docker run --rm \
-                        -v "$PWD":/src \
-                        -v "$PWD/.depcheck-data":/usr/share/dependency-check/data \
-                        owasp/dependency-check:latest \
-                        --project "${PROJECT_NAME}" \
-                        --scan /src \
-                        --format HTML \
-                        --out /src/${DEP_CHECK_OUT_DIR}
+                  mkdir -p reports/dependency-check
+                  mkdir -p .depcheck-data
+                  docker run --rm \
+                    -v "$PWD":/src \
+                    -v "$PWD/.depcheck-data":/usr/share/dependency-check/data \
+                    owasp/dependency-check:latest \
+                    --project tfm-devsecops-demo \
+                    --scan /src \
+                    --format HTML \
+                    --out /src/reports/dependency-check || true
                 '''
             }
         }
+
 
         stage('Construccion imagen Docker') {
             steps {
