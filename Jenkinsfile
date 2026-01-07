@@ -55,16 +55,16 @@ pipeline {
                 sh '''
                   mkdir -p reports/trivy
                   mkdir -p .trivy-cache
-        
                   docker run --rm \
-                    -v "$PWD":/src \
+                    -v /var/lib/jenkins/workspace/tfm-devsecops-pipeline:/src \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$PWD/.trivy-cache":/root/.cache/ \
+                    -v /var/lib/jenkins/workspace/tfm-devsecops-pipeline/.trivy-cache:/root/.cache/ \
                     aquasec/trivy:latest image \
-                      --exit-code 0 \
+                      --exit-code 1 \
                       --severity HIGH,CRITICAL \
                       --format json \
                       --output /src/reports/trivy/trivy-image.json \
+                      tfm-devsecops-demo:latest
                       tfm-devsecops-demo:latest
                 '''
             }
