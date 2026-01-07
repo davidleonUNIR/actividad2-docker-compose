@@ -53,21 +53,23 @@ pipeline {
         stage('Analisis de imagen (Trivy)') {
             steps {
                 sh '''
-                    mkdir -p ${TRIVY_OUT_DIR}
-                    mkdir -p .trivy-cache
-
-                    docker run --rm \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v "$PWD/.trivy-cache":/root/.cache/ \
-                        aquasec/trivy:latest \
-                        image --exit-code 0 \
-                        --severity HIGH,CRITICAL \
-                        --format json \
-                        --output /src/${TRIVY_OUT_DIR}/trivy-image.json \
-                        ${PROJECT_NAME}:latest
+                  mkdir -p reports/trivy
+                  mkdir -p .trivy-cache
+        
+                  docker run --rm \
+                    -v "$PWD":/src \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -v "$PWD/.trivy-cache":/root/.cache/ \
+                    aquasec/trivy:latest image \
+                      --exit-code 0 \
+                      --severity HIGH,CRITICAL \
+                      --format json \
+                      --output /src/reports/trivy/trivy-image.json \
+                      tfm-devsecops-demo:latest
                 '''
             }
         }
+
     }
 
     post {
