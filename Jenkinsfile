@@ -45,7 +45,7 @@ pipeline {
             steps {
                 sh '''
                   echo "Construyendo imagen Docker de la aplicación..."
-                  docker build -t tfm-devsecops-demo:latest backend
+                  docker build -t tfm-devsecops-demo:latest .
                 '''
             }
         }
