@@ -65,7 +65,6 @@ pipeline {
                       --format json \
                       --output /src/reports/trivy/trivy-image.json \
                       tfm-devsecops-demo:latest
-                      tfm-devsecops-demo:latest
                 '''
             }
         }
